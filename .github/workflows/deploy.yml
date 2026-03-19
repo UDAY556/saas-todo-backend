@@ -25,15 +25,19 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'  # Caches dependencies so future builds are faster
 
-      # Step 3: Build the JAR (skip tests for faster deploys — run tests in a separate job in production)
+      # Step 3: Build the JAR (skip tests for faster deploys)
       - name: Build with Maven
         run: mvn clean package -DskipTests
 
-      # Step 4: Deploy the JAR to Azure App Service
-      # Uses the publish profile we stored as a GitHub Secret
+      # Step 4: Login to Azure using Service Principal credentials
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # Step 5: Deploy the JAR to Azure App Service
       - name: Deploy to Azure
         uses: azure/webapps-deploy@v2
         with:
           app-name: saas-todo-backend
-          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: target/*.jar
